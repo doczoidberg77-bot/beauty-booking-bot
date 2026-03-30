@@ -242,7 +242,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 "Выберите покрытие:",
                 reply_markup=InlineKeyboardMarkup(keyboard)
             )
-            return CHOOSING_DATE
+            return CHOOSING_COVER
 
     # Handle coverings
     if data.startswith("cover-"):
@@ -260,7 +260,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
                     "Педикюр: выберите покрытие:",
                     reply_markup=InlineKeyboardMarkup(keyboard)
                 )
-                return CHOOSING_DATE
+                return CHOOSING_COVER
         # Coverage chosen for all
         return await offer_dates(query, context)
 
@@ -288,9 +288,14 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
         return CHOOSING_TIME
 
-    # Step: pick time
+    # Step: pick time — data pick-time-HH:MM-HH:MM
     if data.startswith("pick-time-"):
-        _, start, end = data.split("-")
+        rest = data.removeprefix("pick-time-")
+        m = re.match(r"^(\d{2}:\d{2})-(\d{2}:\d{2})$", rest)
+        if not m:
+            await query.answer("Ошибка данных")
+            return CHOOSING_TIME
+        start, end = m.group(1), m.group(2)
         context.user_data["start_time"] = start
         context.user_data["end_time"] = end
         await query.edit_message_text("Пожалуйста, введите ваше имя:")
@@ -352,7 +357,7 @@ async def offer_dates(query, context):
         "Выберите дату:",
         reply_markup=InlineKeyboardMarkup(kb)
     )
-    return CHOOSING_TIME
+    return CHOOSING_DATE
 
 def summary_service(userd):
     if userd["service"] == "manicure":
@@ -431,7 +436,7 @@ async def export_to_excel(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 def main():
     import os
-    TOKEN = os.getenv("8703049578:AAH5zYJGw63BdJPANUBGhvbNJVjkiGz2UBE")
+    TOKEN = os.getenv("TG_BEAUTY_BOT_TOKEN")
     if not TOKEN:
         print("Установите переменную окружения TG_BEAUTY_BOT_TOKEN с токеном Telegram-бота.")
         return
